@@ -1,0 +1,40 @@
+services:
+  claude-desktop:
+    build:
+      context: .
+      args:
+        USER_UID: ${HOST_UID:-1000}
+        USER_GID: ${HOST_GID:-1000}
+        WITH_COWORK: ${WITH_COWORK:-true}
+        WITH_BROWSER: ${WITH_BROWSER:-true}
+        CACHE_BUST: ${CACHE_BUST:-0}
+    image: claude-desktop:local
+    container_name: claude-desktop
+    init: true
+
+    environment:
+      DISPLAY: ${DISPLAY:-:0}
+      KEYRING_PASSWORD: ${KEYRING_PASSWORD:-claude}
+      CLAUDE_NO_SANDBOX: ${CLAUDE_NO_SANDBOX:-0}
+      CLAUDE_DESKTOP_FLAGS: ${CLAUDE_DESKTOP_FLAGS:-}
+
+    volumes:
+      # X11 socket (also works on Wayland desktops through XWayland)
+      - /tmp/.X11-unix:/tmp/.X11-unix:ro
+      # Persistent home: app settings, sessions, saved sign-in keyring
+      - claude-home:/home/claude
+      # Your project files, visible to Claude Code sessions
+      - ${WORKSPACE:-./workspace}:/home/claude/workspace
+
+    devices:
+      # GPU acceleration. Remove if your host has no /dev/dri (e.g. some VMs),
+      # and add CLAUDE_DESKTOP_FLAGS=--disable-gpu instead.
+      - /dev/dri:/dev/dri
+
+    # Chromium uses X11 shared memory; a shared IPC namespace avoids
+    # blank or garbled windows. Replace with `shm_size: 2gb` if you
+    # prefer more isolation and don't see rendering issues.
+    ipc: host
+
+volumes:
+  claude-home:

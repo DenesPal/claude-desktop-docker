@@ -1,0 +1,14 @@
+# Optional override that enables Cowork (runs tasks in a QEMU/KVM VM).
+# Use with:  docker compose -f compose.yaml -f compose.cowork.yaml up
+#
+# Host prerequisites:
+#   - hardware virtualization enabled in firmware (/dev/kvm exists)
+#   - sudo modprobe vhost_vsock   (/dev/vhost-vsock exists)
+#   - KVM_GID in .env set to:  getent group kvm | cut -d: -f3
+services:
+  claude-desktop:
+    devices:
+      - /dev/kvm:/dev/kvm
+      - /dev/vhost-vsock:/dev/vhost-vsock
+    group_add:
+      - "${KVM_GID:?Set KVM_GID in .env (getent group kvm | cut -d: -f3)}"
