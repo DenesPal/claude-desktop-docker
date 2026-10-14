@@ -17,6 +17,7 @@ services:
       KEYRING_PASSWORD: ${KEYRING_PASSWORD:-claude}
       CLAUDE_NO_SANDBOX: ${CLAUDE_NO_SANDBOX:-0}
       CLAUDE_DESKTOP_FLAGS: ${CLAUDE_DESKTOP_FLAGS:-}
+      PULSE_SERVER: unix:/tmp/pulse/native
 
     volumes:
       # X11 socket (also works on Wayland desktops through XWayland)
@@ -25,6 +26,8 @@ services:
       - claude-home:/home/claude
       # Your project files, visible to Claude Code sessions
       - ${WORKSPACE:-./workspace}:/home/claude/workspace
+      # Host PulseAudio (or PipeWire's pulse server)
+      - /run/user/${HOST_UID:-1000}/pulse:/tmp/pulse
 
     devices:
       # GPU acceleration. Remove if your host has no /dev/dri (e.g. some VMs),
