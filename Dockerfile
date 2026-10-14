@@ -35,6 +35,7 @@ RUN apt-get update \
       fonts-noto-core fonts-noto-color-emoji \
       libgl1-mesa-dri libegl1 \
       procps \
+      libpulse0 pulseaudio-utils \
  && rm -rf /var/lib/apt/lists/*
 
 # Add Anthropic's apt repository, refusing to continue if the key's
