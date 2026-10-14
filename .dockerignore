@@ -1,0 +1,20 @@
+# Only entrypoint.sh is needed by the Dockerfile; exclude everything else.
+.git
+.gitignore
+.dockerignore
+.github
+.env
+.env.*
+env.example
+compose*.y*ml
+docker-compose*.y*ml
+Dockerfile
+LICENSE
+README.md
+*.md
+*.log
+*.tmp
+*.swp
+.idea
+.vscode
+.DS_Store
