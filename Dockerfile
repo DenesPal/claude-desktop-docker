@@ -2,8 +2,13 @@
 #
 # Claude Desktop (Linux beta) in a container.
 # Base must be Debian 12+ or Ubuntu 22.04+ (amd64 or arm64).
+#
+# Stages:
+#   base - Claude Desktop only (default)
+#   dev  - base + development tools (gh, Python 3.14 + uv, Node LTS + npm)
+# Pick one with:  docker build --target dev .   or   BUILD_TARGET=dev (compose)
 ARG BASE_IMAGE=debian:bookworm-slim
-FROM ${BASE_IMAGE}
+FROM ${BASE_IMAGE} AS base
 
 ARG USER_NAME=claude
 ARG USER_UID=1000
@@ -75,3 +80,40 @@ WORKDIR /home/${USER_NAME}/workspace
 ENV HOME=/home/${USER_NAME}
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+# ---------------------------------------------------------------------------
+# dev: base + development utilities
+# ---------------------------------------------------------------------------
+FROM base AS dev
+
+# Python version installed with uv
+ARG PYTHON_VERSION=3.14
+ARG USER_NAME=claude
+
+USER root
+
+# GitHub CLI (gh) and Node.js LTS (+ npm) from their official apt repositories.
+RUN install -d -m 0755 /etc/apt/keyrings \
+ && curl -fsSLo /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+      https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+ && chmod a+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+ && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+      > /etc/apt/sources.list.d/github-cli.list \
+ && curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
+ && apt-get install -y --no-install-recommends gh nodejs git build-essential \
+ && rm -rf /var/lib/apt/lists/*
+
+# uv, plus Python ${PYTHON_VERSION} managed by uv. Installed outside $HOME
+# because the claude-home volume hides anything baked into /home/claude.
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
+ENV UV_PYTHON_INSTALL_DIR=/opt/uv/python \
+    UV_PYTHON_BIN_DIR=/usr/local/bin
+RUN uv python install "${PYTHON_VERSION}" \
+ && chmod -R a+rX /opt/uv
+
+USER ${USER_NAME}
+
+# ---------------------------------------------------------------------------
+# Last stage = what a plain `docker build .` produces: the lean image.
+# ---------------------------------------------------------------------------
+FROM base AS default

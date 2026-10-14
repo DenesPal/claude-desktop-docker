@@ -2,13 +2,14 @@ services:
   claude-desktop:
     build:
       context: .
+      target: ${BUILD_TARGET:-base}
       args:
         USER_UID: ${HOST_UID:-1000}
         USER_GID: ${HOST_GID:-1000}
         WITH_COWORK: ${WITH_COWORK:-true}
         WITH_BROWSER: ${WITH_BROWSER:-true}
         CACHE_BUST: ${CACHE_BUST:-0}
-    image: claude-desktop:local
+    image: claude-desktop:${BUILD_TARGET:-base}
     container_name: claude-desktop
     init: true
 

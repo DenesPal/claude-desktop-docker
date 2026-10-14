@@ -26,6 +26,22 @@ On a Wayland desktop this runs through XWayland, which is the default on GNOME a
 
 Sign-in opens Firefox inside the container. The app accepts a claude.ai subscription or your organization's SSO; Console API keys aren't supported by Desktop.
 
+## Image variants
+
+The Dockerfile is multi-stage. Pick a variant at build time:
+
+| `BUILD_TARGET` | Contents |
+|---|---|
+| `base` (default) | Claude Desktop only |
+| `dev` | `base` plus GitHub CLI (`gh`), Python 3.14 with `uv`, and Node.js LTS with `npm` |
+
+Set `BUILD_TARGET=dev` in `.env`, or on the command line:
+
+```bash
+BUILD_TARGET=dev docker compose up --build   # compose
+docker build --target dev -t claude-desktop:dev .   # plain docker
+```
+
 ## Cowork (optional)
 
 On the host:
